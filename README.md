@@ -1,2 +1,2 @@
 # disc-galaxies-fit
-tests and optimization on the disc-galaxies model 
+tests and optimization of the disc-galaxies model 
