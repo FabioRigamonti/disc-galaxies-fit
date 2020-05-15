@@ -27,14 +27,26 @@ where J is the lenght in the y direction and N in the x direction.'''
 
 class data:
 
-    def __init__(self,x,y,rho,v_los,sigma_los):
+    def __init__(self,
+             x,                   # grid coordinates, x
+             y,                   # grid coordinates, y
+             rho,                 # density value at coordinates
+             v_los,               # line of sight velocity value at coordinates
+             sigma_los,           # line of sight velocity dispersion value at coordinates
+             error_rho,           # density error value at coordinates
+             error_v_los,         # line of sight velocity error value at coordinates
+             error_sigma_los,     # line of sight velocity dispersion error value at coordinates
+             *args, **kwargs):
 
         self.x = x
         self.y = y
         self.rho = rho
         self.v_los = v_los
         self.sigma_los = sigma_los
-
+        
+        self.error_rho       = error_rho
+        self.error_v_los     = error_v_los
+        self.error_sigma_los = error_sigma_los
         #some useful things
         #min and max of the grid
         self.xmin, self.xmax = np.amin(x), np.amax(x)

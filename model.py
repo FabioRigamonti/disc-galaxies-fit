@@ -1,6 +1,8 @@
 import numpy as np 
 #import data_class as dc
 from scipy.special import i0,i1,k0,k1
+import data_class as dc
+import matplotlib.pyplot as plt
 
 '''this is in Km^2 Kpc / (M_sun s^2).'''
 G = 4.299e-6
@@ -294,89 +296,90 @@ def log_likelyhood(par,X,data,data_err,valuto_data,choice):
 #---------------------------------------------------------------------------
                         #MAIN
 #---------------------------------------------------------------------------
-'''
-#definisco qui così uso la griglia senza definirla nella funzione
-x,y,rho,v_los,sigma_los = np.loadtxt('linear_data5.txt',unpack = True, usecols = [0,1,2,3,4])
-x, y, err_rho,err_v,err_sigma = np.loadtxt('linear_error5.txt',usecols=(0,1,2,3,4),unpack = True)
+if __name__=="__main__":
+    #definisco qui così uso la griglia senza definirla nella funzione
+    x,y,rho,v_los,sigma_los = np.loadtxt('linear_data5.txt',unpack = True, usecols = [0,1,2,3,4])
+    x, y, err_rho,err_v,err_sigma = np.loadtxt('linear_error5.txt',usecols=(0,1,2,3,4),unpack = True)
 
-err_lrho = err_rho/rho
+    err_lrho = err_rho/rho
 
-J = np.size(x[ x == x[0] ])
-N = np.size(y[ y == y[0] ])
+    J = np.size(x[ x == x[0] ])
+    N = np.size(y[ y == y[0] ])
 
-x_true = x[0 : J*N : J]
-y_true = y[0 : J]
+    x_true = x[0 : J*N : J]
+    y_true = y[0 : J]
 
-dx = np.abs(x_true[0]-x_true[1])
-dy = np.abs(y_true[0]-y_true[1])
+    dx = np.abs(x_true[0]-x_true[1])
+    dy = np.abs(y_true[0]-y_true[1])
 
-x_rand = np.zeros((N-1,J-1,100))
-y_rand = np.zeros((N-1,J-1,100))
+    x_rand = np.zeros((N-1,J-1,100))
+    y_rand = np.zeros((N-1,J-1,100))
 
-size = 10
+    size = 10
 
-for k in range(0,N-1):
-        
-    a = np.linspace(x_true[k],x_true[k+1],size)
-    xrand = np.repeat(a,size).reshape(size,size).T.ravel()  
-
-    for j in range(0,J-1):
+    for k in range(0,N-1):
             
-        b = np.linspace(y_true[j],y_true[j+1],size)
-        yrand = np.repeat(b,size)
+        a = np.linspace(x_true[k],x_true[k+1],size)
+        xrand = np.repeat(a,size).reshape(size,size).T.ravel()  
 
-        x_rand[k,j,:] = xrand
-        y_rand[k,j,:] = yrand
+        for j in range(0,J-1):
+                
+            b = np.linspace(y_true[j],y_true[j+1],size)
+            yrand = np.repeat(b,size)
 
-
-uno = rho > 0
-due = np.isnan(v_los) == False
-tre = np.isnan(sigma_los) == False
-quattro = np.isnan(err_v) == False
-cinque  = np.isnan(err_sigma) == False
-sei = np.isnan(err_lrho) == False
-
-valuto_data = uno*due*tre*quattro*cinque*sei
+            x_rand[k,j,:] = xrand
+            y_rand[k,j,:] = yrand
 
 
+    uno = rho > 0
+    due = np.isnan(v_los) == False
+    tre = np.isnan(sigma_los) == False
+    quattro = np.isnan(err_v) == False
+    cinque  = np.isnan(err_sigma) == False
+    sei = np.isnan(err_lrho) == False
+
+    valuto_data = uno*due*tre*quattro*cinque*sei
 
 
 
-Mb = np.log10(5e10) 
-Rb	 =0.1  
-Md = np.log10(5e10)  
-Rd 	 =0.8  
-Mh 	= np.log10(5.e+12)  
-Rh =	 10.000  
-xcm 	 =20  
-ycm 	= 5  
-theta =	 2*np.pi/3 
-incl =	 np.pi/4
-
-par = [Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl]
-#lk_foto = log_likelyhood(par,(x_rand,y_rand),np.log10(rho),err_lrho,valuto_data,'fotometria')
-#lk_cine = log_likelyhood(par,(x_rand,y_rand),np.concatenate((v_los,sigma_los)),np.concatenate((err_v,err_sigma)),valuto_data,'cinematica')
-#lk_tot = log_likelyhood(par,(x_rand,y_rand),np.concatenate((np.log10(rho),v_los,sigma_los)),np.concatenate((err_lrho,err_v,err_sigma)),valuto_data,'fotometria + cinematica')
 
 
-#plot eventuale
-rho_model,v_model,sigma_model = model((x_rand,y_rand),Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,'fotometria + cinematica')
-'''
-'''
-mydata1 =dc.data(x,y,np.copy(rho_model),np.copy(v_model),np.copy(sigma_model))
+    Mb = np.log10(5e10) 
+    Rb	 =0.1  
+    Md = np.log10(5e10)  
+    Rd 	 =0.8  
+    Mh 	= np.log10(5.e+12)  
+    Rh =	 10.000  
+    xcm 	 =20  
+    ycm 	= 5  
+    theta =	 2*np.pi/3 
+    incl =	 np.pi/4
 
-fig6,ax6,pmesh6,cbar6 = mydata1.surface_density()
-ax6.set_title('data')
-limrho = pmesh6.get_clim()
-fig6.show()
+    par = [Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl]
+    #lk_foto = log_likelyhood(par,(x_rand,y_rand),np.log10(rho),err_lrho,valuto_data,'fotometria')
+    #lk_cine = log_likelyhood(par,(x_rand,y_rand),np.concatenate((v_los,sigma_los)),np.concatenate((err_v,err_sigma)),valuto_data,'cinematica')
+    lk_tot = log_likelyhood(par,(x_rand,y_rand),np.concatenate((np.log10(rho),v_los,sigma_los)),np.concatenate((err_lrho,err_v,err_sigma)),valuto_data,'fotometria + cinematica')
 
-fig4,ax4,pmesh4,cbar4 = mydata1.velocity_map()
-ax4.set_title('data')
-limv = pmesh4.get_clim()
-fig4.show()
+    print(lk_tot)
+    #plot eventuale
+    rho_model,v_model,sigma_model = model((x_rand,y_rand),Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,'fotometria + cinematica')
+    '''
+    '''
+    mydata1 =dc.data(x,y,np.copy(rho_model),np.copy(v_model),np.copy(sigma_model))
 
-fig5,ax5,pmesh5,cbar5 = mydata1.dispersion_map()
-ax5.set_title('data')
-limsigma = pmesh5.get_clim()
-fig5.show()
-'''
+    fig6,ax6,pmesh6,cbar6 = mydata1.surface_density()
+    ax6.set_title('data')
+    limrho = pmesh6.get_clim()
+    fig6.show()
+
+    fig4,ax4,pmesh4,cbar4 = mydata1.velocity_map()
+    ax4.set_title('data')
+    limv = pmesh4.get_clim()
+    fig4.show()
+
+    fig5,ax5,pmesh5,cbar5 = mydata1.dispersion_map()
+    ax5.set_title('data')
+    limsigma = pmesh5.get_clim()
+    fig5.show()
+
+    plt.show()
