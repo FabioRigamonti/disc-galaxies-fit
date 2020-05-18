@@ -1,6 +1,6 @@
 import numpy as np 
 #import data_class as dc
-from scipy.special import i0,i1,k0,k1
+from scipy.special import i0e,i1e,k0e,k1e
 import data_class as dc
 import matplotlib.pyplot as plt
 
@@ -14,7 +14,7 @@ J = 100
 #---------------------------------------------------------------------------
                     #GENERICA
 #---------------------------------------------------------------------------
-
+'''
 def differenza(r):
     #DIFFERENZA tra le bessel function,
     #sopra 700 scipy non funzia, quindi ci metto espansione
@@ -25,7 +25,7 @@ def differenza(r):
     c[b] = 1/(4*r[b]**3) + 9/(32*r[b]**5)
 
     return(c)
-    
+ '''  
 #---------------------------------------------------------------------------
                     #HERQUINST
 #---------------------------------------------------------------------------
@@ -148,8 +148,8 @@ def v_D(M,R_d,r):
     #compute the circular velocity squared moltiplicata già per il raggio
     #computational problem if the argument of bessel function il large (i.e. 600)
     #vc must go to 0
-    #v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * (i0(r/(2*R_d)) * k0(r/(2*R_d)) - i1(r/(2*R_d)) * k1(r/(2*R_d))) 
-    v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * differenza(r/(2*R_d))
+    v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * (i0e(r/(2*R_d)) * k0e(r/(2*R_d)) - i1e(r/(2*R_d)) * k1e(r/(2*R_d))) 
+    #v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * differenza(r/(2*R_d))
     
     
     return(v_c2)
