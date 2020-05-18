@@ -1,58 +1,56 @@
 prime 25 in tempo:
 
-Wed May 13 21:33:40 2020    output_profiling
+Mon May 18 21:00:28 2020    output_profiling
 
-         1051949 function calls (978432 primitive calls) in 1.694 seconds
+         1051943 function calls (978426 primitive calls) in 1.888 seconds
 
    Ordered by: internal time
-   List reduced from 1622 to 25 due to restriction <25>
+   List reduced from 1618 to 25 due to restriction <25>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.279    0.279    0.281    0.281 model.py:16(differenza)
-        1    0.146    0.146    0.146    0.146 model.py:33(herquinst)
-     9900    0.138    0.000    0.346    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/core/function_base.py:37(linspace)
-        4    0.079    0.020    0.337    0.084 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:1047(read_data)
+        1    0.276    0.276    0.276    0.276 model.py:127(v_D)
+        1    0.172    0.172    0.173    0.173 model.py:22(herquinst)
+     9900    0.150    0.000    0.379    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/core/function_base.py:37(linspace)
+        4    0.078    0.020    0.352    0.088 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:1047(read_data)
    100000    0.078    0.000    0.092    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:777(floatconv)
-49516/19816    0.064    0.000    0.407    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
-        1    0.054    0.054    0.358    0.358 model.py:177(v_tot)
-        1    0.051    0.051    1.696    1.696 model.py:1(<module>)
-      243    0.037    0.000    0.037    0.000 {built-in method marshal.loads}
-    19911    0.037    0.000    0.037    0.000 {built-in method numpy.array}
-     9905    0.035    0.000    0.035    0.000 {method 'reduce' of 'numpy.ufunc' objects}
-40000/20000    0.032    0.000    0.047    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:1018(pack_items)
-      317    0.032    0.000    0.032    0.000 {built-in method builtins.compile}
+49515/19815    0.070    0.000    0.443    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        1    0.060    0.060    0.350    0.350 model.py:159(v_tot)
+        1    0.055    0.055    1.890    1.890 model.py:1(<module>)
+      317    0.055    0.000    0.055    0.000 {built-in method builtins.compile}
+      243    0.050    0.000    0.050    0.000 {built-in method marshal.loads}
+    20002    0.041    0.000    0.068    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:1035(split_line)
+    19910    0.038    0.000    0.038    0.000 {built-in method numpy.array}
+     9905    0.037    0.000    0.037    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+    59/57    0.036    0.001    0.039    0.001 {built-in method _imp.create_dynamic}
+40000/20000    0.033    0.000    0.048    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:1018(pack_items)
     20000    0.032    0.000    0.124    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:1074(<listcomp>)
-        1    0.029    0.029    0.564    0.564 model.py:199(model)
-    20002    0.026    0.000    0.053    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/lib/npyio.py:1035(split_line)
-40002/20002    0.026    0.000    0.061    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/core/_internal.py:875(__call__)
-    59/57    0.023    0.000    0.026    0.000 {built-in method _imp.create_dynamic}
-        1    0.019    0.019    0.019    0.019 model.py:123(rho_D)
-     9904    0.019    0.000    0.074    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/core/fromnumeric.py:73(_wrapreduction)
-     9901    0.017    0.000    0.017    0.000 {method 'repeat' of 'numpy.ndarray' objects}
-   100001    0.014    0.000    0.014    0.000 {method 'lower' of 'str' objects}
-        2    0.014    0.007    0.014    0.007 model.py:105(v_H)
-     9900    0.013    0.000    0.047    0.000 {method 'any' of 'numpy.generic' objects}
-     9900    0.013    0.000    0.013    0.000 {built-in method numpy.arange}
+        1    0.030    0.030    0.589    0.589 model.py:183(model)
+40002/20002    0.026    0.000    0.062    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/core/_internal.py:875(__call__)
+     1209    0.023    0.000    0.023    0.000 {built-in method posix.stat}
+        1    0.023    0.023    0.023    0.023 model.py:111(rho_D)
+     9904    0.021    0.000    0.081    0.000 /home/fabio/.local/lib/python3.8/site-packages/numpy/core/fromnumeric.py:73(_wrapreduction)
+     9901    0.019    0.000    0.019    0.000 {method 'repeat' of 'numpy.ndarray' objects}
+  307/303    0.016    0.000    0.066    0.000 <frozen importlib._bootstrap>:549(module_from_spec)
+        2    0.015    0.008    0.015    0.008 model.py:94(v_H)
+   100001    0.015    0.000    0.015    0.000 {method 'lower' of 'str' objects}
 
 
 relative a model:
 
-Wed May 13 21:33:40 2020    output_profiling
+Mon May 18 21:00:28 2020    output_profiling
 
-         1051949 function calls (978432 primitive calls) in 1.694 seconds
+         1051943 function calls (978426 primitive calls) in 1.888 seconds
 
    Ordered by: internal time
-   List reduced from 1622 to 9 due to restriction <'model.py'>
+   List reduced from 1618 to 8 due to restriction <'model.py'>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    0.279    0.279    0.281    0.281 model.py:16(differenza)
-        1    0.146    0.146    0.146    0.146 model.py:33(herquinst)
-        1    0.054    0.054    0.358    0.358 model.py:177(v_tot)
-        1    0.051    0.051    1.696    1.696 model.py:1(<module>)
-        1    0.029    0.029    0.564    0.564 model.py:199(model)
-        1    0.019    0.019    0.019    0.019 model.py:123(rho_D)
-        2    0.014    0.007    0.014    0.007 model.py:105(v_H)
-        1    0.009    0.009    0.290    0.290 model.py:141(v_D)
-        1    0.004    0.004    0.170    0.170 model.py:165(rhosigma_tot)
-
+        1    0.276    0.276    0.276    0.276 model.py:127(v_D)
+        1    0.172    0.172    0.173    0.173 model.py:22(herquinst)
+        1    0.060    0.060    0.350    0.350 model.py:159(v_tot)
+        1    0.055    0.055    1.890    1.890 model.py:1(<module>)
+        1    0.030    0.030    0.589    0.589 model.py:183(model)
+        1    0.023    0.023    0.023    0.023 model.py:111(rho_D)
+        2    0.015    0.008    0.015    0.008 model.py:94(v_H)
+        1    0.005    0.005    0.201    0.201 model.py:147(rhosigma_tot)
 
