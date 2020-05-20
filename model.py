@@ -3,7 +3,7 @@ import numpy as np
 from scipy.special import i0e,i1e,k0e,k1e
 import data_class as dc
 import matplotlib.pyplot as plt
-from utils import differenza, hernquist_rho, hernquist_sigma
+from utils import hernquist_rho, hernquist_sigma,v_tot
 
 '''this is in Km^2 Kpc / (M_sun s^2).'''
 G = 4.299e-6
@@ -12,21 +12,7 @@ G = 4.299e-6
 N = 100
 J = 100
 
-#---------------------------------------------------------------------------
-                    #GENERICA
-#---------------------------------------------------------------------------
-'''
-def differenza(r):
-    #DIFFERENZA tra le bessel function,
-    #sopra 700 scipy non funzia, quindi ci metto espansione
-    a = r < 700
-    b = r > 700
-    c = np.copy(r)*0
-    c[a] = i0(r[a])*k0(r[a])-i1(r[a])*k1(r[a])
-    c[b] = 1/(4*r[b]**3) + 9/(32*r[b]**5)
-
-    return(c)
- '''  
+ 
 #---------------------------------------------------------------------------
                     #HERQUINST
 #---------------------------------------------------------------------------
@@ -108,11 +94,11 @@ def rhosigma_tot(Mb,Rb,Md,Rd,i,x0,y0,xr,yd):
     return (rhotot,rhoH,rhoD,sigma)
 
 
-
+'''
 def v_tot(Mb,Rb,Md,Rd,Mh,Rh,i,xr,yd):
-    '''return the total circular velocity, in the
+    return the total circular velocity, in the
     disc plane. Maybe should return -vsin(i)cos(phi),
-    but it doesn't matter'''
+    but it doesn't matter
     if (Md == 0.):
         #se non ho ne disco ne alone la velocità media lungo la linea di vista
         #deve essere nulla, xk bulge isotropo (questo accade in tutti i casi in cui non ho disco). In realtà sto mettendo tutte le 
@@ -120,14 +106,14 @@ def v_tot(Mb,Rb,Md,Rd,Mh,Rh,i,xr,yd):
         #da quella di herquinst
         return(0*np.copy(xr))
 
-    r = (xr**2 + yd**2)**0.5
+    r = np.sqrt(np.square(xr) + np.square(yd))
 
     phi = np.arctan2(yd,xr)
 
-    vtot = (v_D(Md,Rd,r) + v_H(Mb,Rb,r) + v_H(Mh,Rh,r))**0.5
-
+    vtot = np.sqrt(v_D(Md,Rd,r) + v_H(Mb,Rb,r) + v_H(Mh,Rh,r))
+  
     return vtot*np.sin(i)*np.cos(phi)
-
+'''
 
 #---------------------------------------------------------------------------
                     #MODEL
@@ -301,25 +287,27 @@ if __name__=="__main__":
         lk_tot = log_likelyhood(par,(x_rand,y_rand),np.concatenate((np.log10(rho),v_los,sigma_los)),np.concatenate((err_lrho,err_v,err_sigma)),valuto_data,'fotometria + cinematica')
 
         print(lk_tot)
+
     #plot eventuale
-#    rho_model,v_model,sigma_model = model((x_rand,y_rand),Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,'fotometria + cinematica')
-#    '''
-#    '''
-#    mydata1 =dc.data(x,y,np.copy(rho_model),np.copy(v_model),np.copy(sigma_model),0,0,0)
-#
-#    fig6,ax6,pmesh6,cbar6 = mydata1.surface_density()
-#    ax6.set_title('data')
-#    limrho = pmesh6.get_clim()
-#    fig6.show()
-#
-#    fig4,ax4,pmesh4,cbar4 = mydata1.velocity_map()
-#    ax4.set_title('data')
-#    limv = pmesh4.get_clim()
-#    fig4.show()
-#
-#    fig5,ax5,pmesh5,cbar5 = mydata1.dispersion_map()
-#    ax5.set_title('data')
-#    limsigma = pmesh5.get_clim()
-#    fig5.show()
-#
-#    plt.show()
+    #rho_model,v_model,sigma_model = model((x_rand,y_rand),Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,'fotometria + cinematica')
+    
+    '''
+    mydata1 =dc.data(x,y,np.copy(rho_model),np.copy(v_model),np.copy(sigma_model),0,0,0)
+
+    fig6,ax6,pmesh6,cbar6 = mydata1.surface_density()
+    ax6.set_title('data')
+    limrho = pmesh6.get_clim()
+    fig6.show()
+
+    fig4,ax4,pmesh4,cbar4 = mydata1.velocity_map()
+    ax4.set_title('data')
+    limv = pmesh4.get_clim()
+    fig4.show()
+
+    fig5,ax5,pmesh5,cbar5 = mydata1.dispersion_map()
+    ax5.set_title('data')
+    limsigma = pmesh5.get_clim()
+    fig5.show()
+
+    plt.show()
+    '''
