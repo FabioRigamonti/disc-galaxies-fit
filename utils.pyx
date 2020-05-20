@@ -6,11 +6,12 @@ import  numpy as np
 cimport numpy as np
 cimport cython
 from scipy.special.cython_special cimport i0e, i1e, k0e, k1e
-from libc.math cimport M_PI, sin, cos, exp, log, sqrt, acos
+from libc.math cimport M_PI, sin, cos, exp, log, sqrt, acos, atan2
 
 '''this is in Km^2 Kpc / (M_sun s^2).'''
 cdef double G = 4.299e-6
 
+'''
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
@@ -27,10 +28,10 @@ cpdef np.ndarray[double, ndim = 3, mode ="c"] differenza(double[:,:,::1] r):
     for i in range(N):
         for j in range(J):
             for k  in range(K):
-                r_tmp = r[i,j,k]
+                r_tmp = r[i,j,k]    #questo va diviso per 2Rd, vedi v_tot
                 result_view[i,j,k] = i0e(r_tmp)*k0e(r_tmp)-i1e(r_tmp)*k1e(r_tmp)
     return result
-
+'''
 cdef inline double scaled_radius(double x, double y, double r0):
     return sqrt(x*x+y*y)/r0
 
@@ -128,3 +129,69 @@ cpdef np.ndarray[double, ndim = 3, mode ="c"] hernquist_sigma(double M, double R
                         sigma_view[i,j,k] = A * (B*C - 6*M_PI*s)
                         
     return sigma
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef double v_D(double Md,double Rd,double r) nogil:
+    #circular v^2 for exp disc
+    cdef double v_c2 = 0.
+    if Md == 0 :
+        return v_c2
+    cdef double r_tmp = 0.
+    r_tmp = r/(2*Rd)
+    v_c2 =  ((G * Md * r) / (Rd*Rd)) * r_tmp * (i0e(r_tmp)*k0e(r_tmp) - i1e(r_tmp)*k1e(r_tmp))
+    
+    return v_c2 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef double v_H(double Mb,double Rb,double r) nogil:
+    #circular v^2 for herquinst (actually bulge and halo)
+    cdef double v_c2 = 0.
+    if Mb == 0.:
+        return v_c2
+    cdef double r_tmp = 0.
+    r_tmp = r/Rb
+    v_c2 = G * Mb * r_tmp / (Rb*(1+r_tmp)*(1+r_tmp) )
+    
+    return v_c2
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cpdef np.ndarray[double, ndim = 3, mode ="c"] v_tot(double Mb,
+                                                    double Rb,
+                                                    double Md,
+                                                    double Rd,
+                                                    double Mh,
+                                                    double Rh,
+                                                    double incl,
+                                                    double[:,:,::1] x,
+                                                    double[:,:,::1] y):
+    cdef Py_ssize_t i,j,k 
+    cdef Py_ssize_t N = x.shape[0]
+    cdef Py_ssize_t J = y.shape[1]
+    cdef Py_ssize_t K = 100
+    cdef double r_tmp = 0.
+    cdef double x_tmp = 0.
+    cdef double y_tmp = 0.
+    cdef double phi = 0.
+    cdef double sin_i = sin(incl)
+    cdef np.ndarray[double, ndim = 3, mode ="c"] v_tot = np.zeros((N,J,K))
+    cdef double[:,:,::1] v_tot_view = v_tot 
+
+    for i in range(N):
+        for j in range(J):
+            for k in range(K):
+                x_tmp = x[i,j,k]
+                y_tmp = y[i,j,k]
+                r_tmp = scaled_radius(x_tmp,y_tmp,1.)
+                phi = atan2(y_tmp,x_tmp)
+                v_tot_view[i,j,k] = sin_i * cos(phi) * sqrt(v_D(Md,Rd,r_tmp) + v_H(Mb,Rb,r_tmp) + v_H(Mh,Rh,r_tmp)) 
+    
+    return v_tot 
