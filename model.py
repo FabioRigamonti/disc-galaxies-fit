@@ -3,7 +3,7 @@ import numpy as np
 from scipy.special import i0e,i1e,k0e,k1e
 import data_class as dc
 import matplotlib.pyplot as plt
-from utils import differenza
+from utils import differenza, hernquist_rho, hernquist_sigma
 
 '''this is in Km^2 Kpc / (M_sun s^2).'''
 G = 4.299e-6
@@ -37,69 +37,9 @@ def herquinst(M,Rb,x0,y0):
     #function that return density and
     #isotropic velocity dispersion.
     #calcolo tutti insieme
-    if (M == 0.) or (Rb == 0.):
-        return (0*np.copy(x0),0*np.copy(x0))
-	
-
-    R = (x0**2 + y0**2)**0.5
-
-    s = R / Rb
-    
-    #se s dovesse essere proprio zero
-    if (np.size(s[s==0]) != 0):
-        s[s==0] = 1e-8
-
-    #definition of variables
-    X = np.zeros((N-1,J-1,100))
-    A = np.zeros((N-1,J-1,100))
-    B = np.zeros((N-1,J-1,100))
-    C = np.zeros((N-1,J-1,100))
-    D = np.zeros((N-1,J-1,100))
-    rho = np.zeros((N-1,J-1,100))
-    sigma = np.zeros((N-1,J-1,100))
-
-    #X
-    a = s < 1
-    b = s == 1
-    c = s > 1
-    #s < 1
-    X[a] = np.log((1 + (1-s[a]**2)**0.5) / s[a]) / ((1 - s[a]**2)**0.5)
-    #s = 1
-    X[b] = 1.
-    #s > 1
-    X[c] = np.arccos(1/s[c]) / ((s[c]**2 - 1)**0.5)
-    
-    #rho 
-    d = (s >= 0.98) * (s <= 1.02)
-    e = s!=1
-    A[e] = M / (2 * np.pi * Rb**2 * (1 - s[e]**2)**2)
-    B[e] = (2 + s[e]**2) * X[e] - 3
-    rho[e] = A[e] * B[e]
-    rho[d] = 4*M / (30*np.pi*Rb**2)
-
-    #sigma
-    f = s <= 6.
-    g = s > 6.
-    h = (s >= 0.98) * (s <= 1.02)
-
-    # s < 6
-    A = (G * M**2 ) / (12 * np.pi * Rb**3 * rho[f])
-    B = 1 /  (2*(1 - s[f]**2)**3)
-    C = (-3 * s[f]**2) * X[f] * (8*s[f]**6 - 28*s[f]**4 + 35*s[f]**2 - 20) - 24*s[f]**6 + 68*s[f]**4 - 65*s[f]**2 + 6
-    sigma[f] = A * (B*C - 6*np.pi*s[f])
-
-    # s > 6
-    A = (G * M * 8) / (15 * s[g] * np.pi * Rb)
-    B = (8/np.pi - 75*np.pi/64) / s[g]
-    C = (64/np.pi**2 - 297/56) / s[g]**2
-    D = (512/np.pi**3 - 1199/(21*np.pi) - 75*np.pi/512) / s[g]**3
-    sigma[g] = A * (1 + B + C + D)
-
-    #s = 1
-    sigma[h] = G*M*(332 - 105*np.pi)/28*Rb
-
-
-    return(rho,sigma**0.5)
+    rho = hernquist_rho(M,Rb,x0,y0)
+    sigma = hernquist_sigma(M,Rb,rho,x0,y0)
+    return(rho,sigma)
 
  
 
@@ -149,7 +89,7 @@ def v_D(M,R_d,r):
     #compute the circular velocity squared moltiplicata già per il raggio
     #computational problem if the argument of bessel function il large (i.e. 600)
     #vc must go to 0
-    v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * differenza(r/(2*R_d))    
+    v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * differenza(r/(2*R_d))
     
     return(v_c2)
 
@@ -218,7 +158,7 @@ def model(X,Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,choice):
     sigma_los = np.zeros((N,J))
     
     #valuto le densità in tutti i punti
-    rhotot,rhoH,rhoD,sigmaH = rhosigma_tot(Mb,Rb,Md,Rd,incl,x0,y0,xr,yd)
+    rhotot,rhoH,rhoD,sigmaH2 = rhosigma_tot(Mb,Rb,Md,Rd,incl,x0,y0,xr,yd)
 
     #questo è equivalente a ciclo su griglia in cui medio punto per punto
     rho[:-1,:-1] = np.mean(rhotot,axis=2)
@@ -251,7 +191,7 @@ def model(X,Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,choice):
         #questo mi serve per calcolare vtot-v_los in pratica a è (N,J,100) e a[0,0,:] contiene 100 volte v_los[0,0] 
         #repeat ripete tutti gli elementi di un vettore k volte se x = [1,2] repeat(x,2)= [1,1,2,2]
         a = np.repeat(v_los[:-1,:-1].ravel(),100).reshape(N-1,J-1,100)
-        sigma_los[:-1,:-1] = (np.sum(rhoD * (vtot-a)**2 + sigmaH**2 * rhoH,axis = 2) /np.sum(rhotot,axis = 2) )**0.5
+        sigma_los[:-1,:-1] = (np.sum(rhoD * (vtot-a)**2 + sigmaH2 * rhoH,axis = 2) /np.sum(rhotot,axis = 2) )**0.5
         rho_cons = rho.ravel()
         v_cons = v_los.ravel()
         sigma_cons = sigma_los.ravel()
@@ -353,32 +293,33 @@ if __name__=="__main__":
     ycm 	= 5  
     theta =	 2*np.pi/3 
     incl =	 np.pi/4
+    
+    for _ in range(10):
+        par = [Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl]
+        #lk_foto = log_likelyhood(par,(x_rand,y_rand),np.log10(rho),err_lrho,valuto_data,'fotometria')
+        #lk_cine = log_likelyhood(par,(x_rand,y_rand),np.concatenate((v_los,sigma_los)),np.concatenate((err_v,err_sigma)),valuto_data,'cinematica')
+        lk_tot = log_likelyhood(par,(x_rand,y_rand),np.concatenate((np.log10(rho),v_los,sigma_los)),np.concatenate((err_lrho,err_v,err_sigma)),valuto_data,'fotometria + cinematica')
 
-    par = [Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl]
-    #lk_foto = log_likelyhood(par,(x_rand,y_rand),np.log10(rho),err_lrho,valuto_data,'fotometria')
-    #lk_cine = log_likelyhood(par,(x_rand,y_rand),np.concatenate((v_los,sigma_los)),np.concatenate((err_v,err_sigma)),valuto_data,'cinematica')
-    lk_tot = log_likelyhood(par,(x_rand,y_rand),np.concatenate((np.log10(rho),v_los,sigma_los)),np.concatenate((err_lrho,err_v,err_sigma)),valuto_data,'fotometria + cinematica')
-
-    print(lk_tot)
+        print(lk_tot)
     #plot eventuale
-    rho_model,v_model,sigma_model = model((x_rand,y_rand),Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,'fotometria + cinematica')
-    '''
-    '''
-    mydata1 =dc.data(x,y,np.copy(rho_model),np.copy(v_model),np.copy(sigma_model))
-
-    fig6,ax6,pmesh6,cbar6 = mydata1.surface_density()
-    ax6.set_title('data')
-    limrho = pmesh6.get_clim()
-    fig6.show()
-
-    fig4,ax4,pmesh4,cbar4 = mydata1.velocity_map()
-    ax4.set_title('data')
-    limv = pmesh4.get_clim()
-    fig4.show()
-
-    fig5,ax5,pmesh5,cbar5 = mydata1.dispersion_map()
-    ax5.set_title('data')
-    limsigma = pmesh5.get_clim()
-    fig5.show()
-
-    plt.show()
+#    rho_model,v_model,sigma_model = model((x_rand,y_rand),Mb,Rb,Md,Rd,Mh,Rh,xcm,ycm,theta,incl,'fotometria + cinematica')
+#    '''
+#    '''
+#    mydata1 =dc.data(x,y,np.copy(rho_model),np.copy(v_model),np.copy(sigma_model),0,0,0)
+#
+#    fig6,ax6,pmesh6,cbar6 = mydata1.surface_density()
+#    ax6.set_title('data')
+#    limrho = pmesh6.get_clim()
+#    fig6.show()
+#
+#    fig4,ax4,pmesh4,cbar4 = mydata1.velocity_map()
+#    ax4.set_title('data')
+#    limv = pmesh4.get_clim()
+#    fig4.show()
+#
+#    fig5,ax5,pmesh5,cbar5 = mydata1.dispersion_map()
+#    ax5.set_title('data')
+#    limsigma = pmesh5.get_clim()
+#    fig5.show()
+#
+#    plt.show()
