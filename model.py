@@ -3,6 +3,7 @@ import numpy as np
 from scipy.special import i0e,i1e,k0e,k1e
 import data_class as dc
 import matplotlib.pyplot as plt
+from utils import differenza
 
 '''this is in Km^2 Kpc / (M_sun s^2).'''
 G = 4.299e-6
@@ -148,9 +149,7 @@ def v_D(M,R_d,r):
     #compute the circular velocity squared moltiplicata già per il raggio
     #computational problem if the argument of bessel function il large (i.e. 600)
     #vc must go to 0
-    v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * (i0e(r/(2*R_d)) * k0e(r/(2*R_d)) - i1e(r/(2*R_d)) * k1e(r/(2*R_d))) 
-    #v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * differenza(r/(2*R_d))
-    
+    v_c2 =  ((G * M * r**2) / (2 * R_d**3)) * differenza(r/(2*R_d))    
     
     return(v_c2)
 
