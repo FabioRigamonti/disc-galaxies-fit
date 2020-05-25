@@ -47,6 +47,8 @@ class data:
         self.error_rho       = error_rho
         self.error_v_los     = error_v_los
         self.error_sigma_los = error_sigma_los
+        self.error_lrho      = self.error_rho/self.rho
+        
         #some useful things
         #min and max of the grid
         self.xmin, self.xmax = np.amin(x), np.amax(x)
