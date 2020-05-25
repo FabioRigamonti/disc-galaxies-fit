@@ -7,7 +7,7 @@ import  numpy as np
 cimport numpy as np
 cimport cython
 from scipy.special.cython_special cimport i0e, i1e, k0e, k1e
-from libc.math cimport M_PI, sin, cos, exp, log, sqrt, acos, atan2,log10
+from libc.math cimport M_PI, sin, cos, exp, log, sqrt, acos, atan2,log10,isfinite
 
 '''this is in Km^2 Kpc / (M_sun s^2).'''
 cdef double G = 4.299e-6
@@ -155,10 +155,15 @@ cpdef np.ndarray[double, ndim = 3, mode ="c"] hernquist_sigma(double M, double R
 #---------------------------------------------------------------------------
 #N.B. ---> RICORDARSI QUANDO SI FANNO LE DIVISIONI 5/2 = 2 MENTRE 5.0/2.0 = 2.5
 #---------------------------------------------------------------------------
-
+#rebuild all in order to do just one cycle in the fun model or in likelihood
 #---------------------------------------------------------------------------
                     #HERQUINST
 #---------------------------------------------------------------------------
+#Faccio una struc per herquinst così calcolo rho e sigma insieme senza fare
+#valutare due volte X_function per esempio.
+cdef struct HERQUINST:
+    double rho 
+    double sigma 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -182,86 +187,65 @@ cdef double Xfunction(double s) nogil :
         return acos(1.0/s)/sqrt(-one_minus_s2)
 
 
-
-#rebuild all in order to do just one cycle in the fun model
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef double hernquist_rho(double M, double Rb, double r) nogil:
-    #function that return density and
-    #isotropic velocity dispersion.
-    #calcolo tutti insieme
-	
-    cdef double s = 0.
-    cdef double s2 = 0.
-    cdef double X = 0.0
-    cdef double Rb2 = Rb*Rb
-    cdef double rho = 0.
-    cdef double one_minus_s2 = 0.
-    cdef double diff =0.
-    if (M == 0.) or (Rb == 0.): #is this line pure C?
-        return rho
-    s = r/Rb
-    if s == 0:
-        s = 1e-8
-
-    if s >= 0.98 and s <=1.02:
-        rho = 4.0*M / (30.0*M_PI*Rb2)
-    else:
-        X = Xfunction(s)
-        s2 = s*s
-        one_minus_s2 = (1.0 - s2)
-        rho = (M / (2.0 * M_PI * Rb2 * one_minus_s2 * one_minus_s2)) * ((2.0 + s2) * X - 3.0)
-        #rho = (M / (2.0 * Rb2 * one_minus_s2 * one_minus_s2)) * ((2.0 + s2) * X - 3.0)
-    return rho
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.nonecheck(False)
-@cython.cdivision(True)
-cdef double hernquist_sigma(double M, double Rb, double rho, double r) nogil :
+cdef HERQUINST herquinst_function(double M, double Rb, double r) nogil:
+    #return HERQUINST struct
+    cdef HERQUINST herquinst
+    herquinst.rho = 0.
+    herquinst.sigma = 0.
+    cdef double Rb2 = Rb*Rb 
     cdef double s = r/Rb
     cdef double s2 = 0.
     cdef double s3 = 0.
     cdef double s4 = 0.
     cdef double s6 = 0.
     cdef double one_minus_s2 = 0.
+    cdef double one_minus_s2_2 = 0.
     cdef double A,B,C,D
     cdef double sigma = 0.
+    cdef double X = 0.0
+    cdef double rho = 0.
     cdef double M_PI2 = M_PI*M_PI
     cdef double M_PI3 = M_PI2*M_PI
 
-    if (M == 0.) or (Rb == 0.): #is this line pure C?
-        return sigma
-
-    if s == 0.0:
-        s = 1e-8
+    if (M == 0.) or (Rb == 0.): 
+        return herquinst 
     
-    if s >= 10.0:
-        s2 = s*s 
-        s3 = s*s2
-        A = (G * M * 8.0) / (15.0 * s * M_PI * Rb)
-        B = (8.0/M_PI - 75.0*M_PI/64.0) / s
-        C = (64.0/(M_PI2) - 297.0/56.0) / s2
-        D = (512.0/(M_PI3) - 1199.0/(21.0*M_PI) - 75.0*M_PI/512.0) / s3
-        sigma = A * (1 + B + C + D)
+    if s == 0:
+        s = 1e-8
+
+    if s >= 0.98 and s <=1.02:
+        rho = 4.0*M / (30.0*M_PI*Rb2)
+        sigma = G*M*(332.0 - 105.0*M_PI)/28.0*Rb
     else:
-        if s >= 0.98 and s <=1.02:
-            sigma = G*M*(332.0 - 105.0*M_PI)/28.0*Rb
+        X = Xfunction(s)
+        s2 = s*s
+        one_minus_s2 = (1.0 - s2)
+        one_minus_s2_2 = one_minus_s2*one_minus_s2
+        rho = (M / (2.0 * M_PI * Rb2 * one_minus_s2_2)) * ((2.0 + s2) * X - 3.0) 
+        if s >= 10.0:
+            s3 = s*s2
+            A = (G * M * 8.0) / (15.0 * s * M_PI * Rb)
+            B = (8.0/M_PI - 75.0*M_PI/64.0) / s
+            C = (64.0/(M_PI2) - 297.0/56.0) / s2
+            D = (512.0/(M_PI3) - 1199.0/(21.0*M_PI) - 75.0*M_PI/512.0) / s3
+            sigma = A * (1 + B + C + D)   
         else:
-            s2 = s*s 
             s4 = s2*s2 
             s6 = s4*s2
-            one_minus_s2 = 1.0 - s2 
-            A = (G * M*M ) / (12.0 * M_PI * Rb**3 * rho)
-            B = 1.0 /  (2.0*one_minus_s2*one_minus_s2*one_minus_s2)
-            C = (-3.0 * s2) * Xfunction(s) * (8.0*s6 - 28.0*s4 + 35.0*s2 - 20.0) - 24.0*s6 + 68.0*s4 - 65.0*s2 + 6.0
+            A = (G * M*M ) / (12.0 * M_PI * Rb2 * Rb * rho)
+            B = 1.0 /  (2.0*one_minus_s2_2*one_minus_s2)
+            C = (-3.0 * s2) * X * (8.0*s6 - 28.0*s4 + 35.0*s2 - 20.0) - 24.0*s6 + 68.0*s4 - 65.0*s2 + 6.0
             sigma = A * (B*C - 6.0*M_PI*s)
-            
-    return sigma 
     
+    herquinst.rho = rho
+    herquinst.sigma = sigma
+    
+    return herquinst
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -401,6 +385,9 @@ cpdef np.ndarray[double,ndim=3,mode='c'] model (double[:,:,::1] x,#x position re
     cdef Py_ssize_t N = x.shape[0]
     cdef Py_ssize_t J = x.shape[1]
     cdef Py_ssize_t K = 100
+    
+    #define HERQUINST STRUC 
+    cdef HERQUINST herquinst  
 
     #   RHO DEFINITIONS
     cdef double rhoB = 0.
@@ -450,7 +437,9 @@ cpdef np.ndarray[double,ndim=3,mode='c'] model (double[:,:,::1] x,#x position re
                 r_true = radius(xr,yd)
                 phi = atan2(yd,xr)
 
-                rhoB = hernquist_rho(Mb,Rb,r_proj)
+                #rhoB = hernquist_rho(Mb,Rb,r_proj)
+                herquinst = herquinst_function(Mb,Rb,r_proj)
+                rhoB = herquinst.rho 
                 rhoD = rho_D(Md,Rd,r_true,c_incl)
                 all_rhoD_view[i,j,k] = rhoD
                 sum_rhoD = sum_rhoD + rhoD
@@ -462,7 +451,8 @@ cpdef np.ndarray[double,ndim=3,mode='c'] model (double[:,:,::1] x,#x position re
 
                 #questo è rho_H*sigma_H2 andrà sommato nel prossimo ciclo 
                 #con la dispersione del disco che devo ancora calcolare
-                rho_dot_sigma2_view[i,j,k] = rhoB*hernquist_sigma(Mb,Rb,rhoB,r_proj)
+                #rho_dot_sigma2_view[i,j,k] = rhoB*hernquist_sigma(Mb,Rb,rhoB,r_proj)
+                rho_dot_sigma2_view[i,j,k] = rhoB*herquinst.sigma
             
             #le sommo finito il ciclo divido per 100, per fare la media
             tot_view[i,j,0] = tot_view[i,j,0]/100.0
@@ -543,11 +533,13 @@ cpdef double likelihood (double[:,:,::1] x,#x position refined grid è 99x99x100
     cdef Py_ssize_t J = y.shape[1]
     cdef Py_ssize_t K = 100
 
+    #define HERQUINST STRUCTURE
+    cdef HERQUINST herquinst
     #   RHO DEFINITIONS
     cdef double rhoB = 0.
     cdef double rhoD = 0.
     cdef double sum_rhoD = 0.         #mi serve per mediare la vel
-    cdef rho_tmp = 0.
+    cdef double rho_tmp = 0.
     #devo salvarmi tutte le densità del disco perchè poi le utilizzo per la sigma
     cdef np.ndarray[double,ndim=3,mode="c"] all_rhoD = np.zeros((N,J,K))
     cdef double[:,:,::1] all_rhoD_view = all_rhoD
@@ -563,7 +555,7 @@ cpdef double likelihood (double[:,:,::1] x,#x position refined grid è 99x99x100
     cdef double[:,:,::1] all_v_view = all_v
 
     #SIGMA DEFINITIONS
-    cdef sigma_tmp = 0.
+    cdef double sigma_tmp = 0.
 
     #si può forse pensare ad un altro moto di salvare le quantità che calcolo
     cdef np.ndarray[double,ndim=3,mode='c'] tot = np.zeros((N,J,2))
@@ -584,7 +576,7 @@ cpdef double likelihood (double[:,:,::1] x,#x position refined grid è 99x99x100
         for j in range(J):
             sum_rhoD = 0.
             #solo dove ho dati faccio i conti
-            if ydata[i,j,0] != -np.inf:
+            if isfinite(ydata[i,j,0]) != 0:
 
                 for k in range(K):
                     #queste operazioni è meglio farle in una funzione?
@@ -597,8 +589,9 @@ cpdef double likelihood (double[:,:,::1] x,#x position refined grid è 99x99x100
                     r_proj = radius(x0,y0) 
                     r_true = radius(xr,yd)
                     phi = atan2(yd,xr)
-
-                    rhoB = hernquist_rho(Mb,Rb,r_proj)
+                    
+                    herquinst = herquinst_function(Mb,Rb,r_proj)
+                    rhoB = herquinst.rho 
                     rhoD = rho_D(Md,Rd,r_true,c_incl)
                     all_rhoD_view[i,j,k] = rhoD
                     sum_rhoD = sum_rhoD + rhoD
@@ -610,7 +603,7 @@ cpdef double likelihood (double[:,:,::1] x,#x position refined grid è 99x99x100
 
                     #questo è rho_H*sigma_H2 andrà sommato nel prossimo ciclo 
                     #con la dispersione del disco che devo ancora calcolare
-                    rho_dot_sigma2_view[i,j,k] = rhoB*hernquist_sigma(Mb,Rb,rhoB,r_proj)
+                    rho_dot_sigma2_view[i,j,k] = rhoB*herquinst.sigma
             
             #le sommo finito il ciclo divido per 100, per fare la media
             tot_view[i,j,0] = tot_view[i,j,0]/100.0
@@ -627,7 +620,7 @@ cpdef double likelihood (double[:,:,::1] x,#x position refined grid è 99x99x100
             #i calcoli li faccio solo dove serve
             rho_tmp = ydata[i,j,0]
             #questo rallenta? c'è un supporto in C di inf?
-            if rho_tmp != -np.inf:
+            if isfinite(rho_tmp) != 0:
                 #mean v in bin
                 v_tmp = tot_view[i,j,1]
                 #usando sigma_tmp evito di allocare memoria per la sigma
