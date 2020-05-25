@@ -1,63 +1,54 @@
-la funzione model è ridotta di più di un fattore 10, qui è segnato 1.06s per chiamare model, è dovuto al fatto che il profiling rallenta
-e inoltre non posso utilizzare nogil per fare il profiling. Anche valori di tottime delle singole funzioni sono maggiori sempre perché
-profiling rallenta. 
+   #modello normale(0.5-0.6 s) no funzioni da utils.pyx
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.239    0.239    0.239    0.239 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:129(v_D)
+        1    0.142    0.142    0.142    0.142 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:23(herquinst)
+        1    0.051    0.051    0.300    0.300 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:161(v_tot)
+        1    0.029    0.029    0.499    0.499 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:185(model_vecchio)
+        1    0.018    0.018    0.018    0.018 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:113(rho_D)
+        2    0.010    0.005    0.010    0.005 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:96(v_H)
+        1    0.004    0.004    0.164    0.164 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:149(rhosigma_tot)
+        1    0.002    0.002    0.502    0.502 /home/fabio/Scrivania/Università/quarto_anno/tesi/work_in/disc-galaxies-fit/model.py:279(log_likelihood)
 
-Facendo andare solo model il tempo è di circa 0.04s.
+#modello tutte le funzioni da utils.pyx
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.369    0.369    0.369    0.369 utils.pyx:481(likelihood)
+        1    0.000    0.000    0.369    0.369 utils.pyx:481(likelihood (wrapper))
 
-prime 25 in tempo:
+            
+        CON PIÙ DETTAGLI: ci mette più tempo perchè ogni call di funzione chiama il profiling
+                      Ordered by: internal time
+                        List reduced from 21 to 13 due to restriction <'utils.pyx'>
 
-Fri May 22 12:33:18 2020    profile.output
+                        ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+                                1    1.191    1.191    2.798    2.798 utils.pyx:481(likelihood)
+                        980100    0.472    0.000    0.936    0.000 utils.pyx:294(v_tot)
+                        980100    0.337    0.000    0.337    0.000 utils.pyx:257(v_D)
+                        980100    0.202    0.000    0.278    0.000 utils.pyx:163(hernquist_rho)
+                        1960200    0.129    0.000    0.129    0.000 utils.pyx:19(radius)
+                        1960200    0.128    0.000    0.128    0.000 utils.pyx:238(v_H)
+                        980100    0.078    0.000    0.078    0.000 utils.pyx:272(rho_D)
+                        980144    0.076    0.000    0.076    0.000 utils.pyx:26(Xfunction)
+                        980100    0.068    0.000    0.068    0.000 utils.pyx:196(hernquist_sigma)
+                        980100    0.065    0.000    0.065    0.000 utils.pyx:315(rho_tot)
+                        980100    0.050    0.000    0.050    0.000 utils.pyx:325(sigma_tot)
+                            29403    0.002    0.000    0.002    0.000 utils.pyx:468(lk)
+                                1    0.000    0.000    2.798    2.798 utils.pyx:481(likelihood (wrapper))
 
-         8842742 function calls in 1.781 seconds
+    
+    
+    #modello utilizzando alcune funzioni (differenza e herquinst da utils.pyx)
+    (v_D diventa poco dispendiosa perchè profiling non conta il tempo speso da differenza)
+    151 function calls in 0.395 seconds
 
    Ordered by: internal time
+   List reduced from 67 to 25 due to restriction <25>
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    1.065    1.065    1.781    1.781 utils.pyx:337(model)
-   980100    0.193    0.000    0.267    0.000 utils.pyx:160(hernquist_rho)
-  1960200    0.127    0.000    0.127    0.000 utils.pyx:19(radius)
-  1001912    0.076    0.000    0.076    0.000 utils.pyx:26(Xfunction)
-   980100    0.073    0.000    0.074    0.000 utils.pyx:192(hernquist_sigma)
-   980100    0.067    0.000    0.067    0.000 utils.pyx:265(rho_D)
-   980100    0.066    0.000    0.066    0.000 utils.pyx:287(v_tot)
-   980100    0.065    0.000    0.065    0.000 utils.pyx:308(rho_tot)
-   980100    0.049    0.000    0.049    0.000 utils.pyx:319(sigma_tot)
-        1    0.000    0.000    1.781    1.781 {built-in method builtins.exec}
-        1    0.000    0.000    1.781    1.781 {built-in method utils.model}
-        6    0.000    0.000    0.000    0.000 stringsource:345(__cinit__)
-        6    0.000    0.000    0.000    0.000 stringsource:657(memoryview_cwrapper)
-        1    0.000    0.000    1.781    1.781 <string>:1(<module>)
-        1    0.000    0.000    1.781    1.781 utils.pyx:337(model (wrapper))
-        6    0.000    0.000    0.000    0.000 stringsource:372(__dealloc__)
-        6    0.000    0.000    0.000    0.000 stringsource:663(memoryview_check)
-        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
-
-
-relative a model:
-
-Fri May 22 12:33:18 2020    profile.output
-
-         8842742 function calls in 1.781 seconds
-
-relative a utils:
-
-Fri May 22 12:33:18 2020    profile.output
-
-         8842742 function calls in 1.781 seconds
-
-   Ordered by: internal time
-   List reduced from 18 to 10 due to restriction <'utils.pyx'>
-
-   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-        1    1.065    1.065    1.781    1.781 utils.pyx:337(model)
-   980100    0.193    0.000    0.267    0.000 utils.pyx:160(hernquist_rho)
-  1960200    0.127    0.000    0.127    0.000 utils.pyx:19(radius)
-  1001912    0.076    0.000    0.076    0.000 utils.pyx:26(Xfunction)
-   980100    0.073    0.000    0.074    0.000 utils.pyx:192(hernquist_sigma)
-   980100    0.067    0.000    0.067    0.000 utils.pyx:265(rho_D)
-   980100    0.066    0.000    0.066    0.000 utils.pyx:287(v_tot)
-   980100    0.065    0.000    0.065    0.000 utils.pyx:308(rho_tot)
-   980100    0.049    0.000    0.049    0.000 utils.pyx:319(sigma_tot)
-        1    0.000    0.000    1.781    1.781 utils.pyx:337(model (wrapper))
-
-
+        1    0.228    0.228    0.228    0.228 utils.pyx:35(differenza)
+        1    0.086    0.086    0.393    0.393 model.py:115(model_vecchio)
+        1    0.015    0.015    0.015    0.015 utils.pyx:61(hernquist_rho)
+        1    0.014    0.014    0.014    0.014 model.py:47(rho_D)
+        1    0.010    0.010    0.239    0.239 model.py:62(v_D)
+        2    0.010    0.005    0.010    0.005 model.py:30(v_H)
+        1    0.009    0.009    0.009    0.009 utils.pyx:101(hernquist_sigma)
+        1    0.009    0.009    0.258    0.258 model.py:95(v_tot)
